@@ -1,0 +1,11 @@
+{
+  "name": "image_abstraction",
+  "version": "1.0.0",
+  "description": "freecodecamp image abstraction layer challenge",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "pkh1162",
+  "license": "ISC"
+}
