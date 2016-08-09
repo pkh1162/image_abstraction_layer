@@ -1,5 +1,7 @@
 var express = require("express");
 var request = require("request");
+var mongo = require("mongodb").MongoClient;
+var dbUrl = "mongodb://public:publicpassword@ds029635.mlab.com:29635/pkh1162-test";
 
 var searchTerm = "";
 var count = 10;
@@ -56,6 +58,7 @@ app.get("/recent", function(req, res){
         recentSearches = {};
     }
     else{
+        getSearchesFromDb();
         res.json(recentSearches);    
     }
     
@@ -149,4 +152,71 @@ function addToRecent(searchedTerm, time){
         time : formattedTime
     }
     recentCount++;
+    
+    addToDb(recentSearches[count]);
+    
+    
+}
+
+
+function addToDb(searchMetaResult) {
+    
+    mongo.connect(dbUrl, function(err, db){
+        if (err){
+            console.log("Couldn't connect to the database");
+            throw err;
+        }
+        else{
+            console.log("Connected to the database");
+            var searchesCollection = db.collection("image_abstraction_recentSearches");
+            
+            
+            
+            searchesCollection.insert(searchMetaResult, function(err, data){
+                if (err){
+                    console.log("Couldn't insert search into the database");
+                }
+                else{
+                    console.log("Search inserted successfully");
+                }
+            })
+            
+            searchesCollection.count(function(err, count){
+                if (err){
+                    console.log("Problem counting");
+                    throw err;
+                }
+                else console.log(count);
+            })
+        }
+        db.close();
+        return;
+    })
+    
+    
+}
+
+
+function getSearchesFromDb() {
+    
+    mongo.connect(dbUrl, function(err, db){
+        if (err){
+            console.log("Problem connecting to db (recent searches)");
+            throw err;
+        }
+        else{
+            var searchesCollection = db.collection("image_abstraction_recentSearches");
+            searchesCollection.find().toArray(function(err, data){
+                if (err){
+                    console.log("Problem getting recent seaches from db");
+                    throw err;
+                }
+                
+                console.log(data);
+            });
+            
+        }
+        db.close();
+        
+    })
 }
