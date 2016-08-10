@@ -1,13 +1,14 @@
 var express = require("express");
 var request = require("request");
 var mongo = require("mongodb").MongoClient;
-var dbUrl = "mongodb://public:publicpassword@ds029635.mlab.com:29635/pkh1162-test";
+var dbUrl = process.env.MONGO_URI_IMAGE_ABSTRACTION;
 
 var searchTerm = "";
 var count = 10;
 var offset = 0;
 var recentSearches = {};
 var recentCount = 1;
+var recentSearchesCount = 0;
 
 
 var app = express();
@@ -50,21 +51,57 @@ app.get("/", function(req, res){
 
 
 app.get("/recent", function(req, res){
+    
+    var searchCount = 0;
+    
+    mongo.connect(dbUrl, function(err, db){
+        if (err){
+            console.log("Not connected");
+            throw err;
+        }
+        else{
+            console.log("Connected");
+            var collection = db.collection("image_abstraction_recentSearches");
+            collection.count(function(err, count){
+                if (err){
+                    throw err;
+                }
+                else{
+                    searchCount = count;
+        
+                    if (searchCount == 0 || searchCount == undefined){
+                        recentSearches["no_searches"] = "No searches have been made.";
+                        res.json(recentSearches);
+                        recentSearches = {};
+                    }
+                    else{
+                        getSearchesFromDb(res);
+                    }
+                }
+               
+                db.close();
+            })
+        }
+        
+       
+        
+    })
+    
+    
 //    res.writeHead(200, {"Content-Type" : "application/json"});
-
-    if(recentCount == 1){
-        recentSearches["no_searches"] = "No searches have been made.";
-        res.json(recentSearches);
-        recentSearches = {};
-    }
-    else{
-        getSearchesFromDb();
-        res.json(recentSearches);    
-    }
+    
+//    getSearchesCount(afterCount, res);
+  
+  
     
     
-    res.end();
+    
+    
+    
 })
+
+
+
 
 
 app.listen(process.env.PORT || 8080, function(){
@@ -197,7 +234,7 @@ function addToDb(searchMetaResult) {
 }
 
 
-function getSearchesFromDb() {
+function getSearchesFromDb(res) {
     
     mongo.connect(dbUrl, function(err, db){
         if (err){
@@ -206,13 +243,16 @@ function getSearchesFromDb() {
         }
         else{
             var searchesCollection = db.collection("image_abstraction_recentSearches");
-            searchesCollection.find().toArray(function(err, data){
+            searchesCollection.find({}, {_id : 0}, {sort: {_id : -1}, limit : 10}).toArray(function(err, data){
                 if (err){
                     console.log("Problem getting recent seaches from db");
                     throw err;
                 }
                 
-                console.log(data);
+               
+                res.json(data);
+            //   console.log(data);
+               
             });
             
         }
@@ -220,3 +260,4 @@ function getSearchesFromDb() {
         
     })
 }
+
