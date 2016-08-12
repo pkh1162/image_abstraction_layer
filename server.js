@@ -12,6 +12,7 @@ var recentSearchesCount = 0;
 
 
 var app = express();
+app.set("view engine", "pug");
 
 var options = {
     url : "https://api.cognitive.microsoft.com/bing/v5.0/images/search?q=" + searchTerm + "&count=" + count + "&offset=" + offset + "&mkt=en-us HTTP/1.1",
@@ -22,11 +23,18 @@ var options = {
 
 
 
-app.get("/", function(req, res){
+
+
+
+app.get("/*", function(req, res){
     
-   
-    
-    initParams(req.query);
+    //res.render("index");
+    if (Object.keys(req.query).length == 0){
+        res.render("index");
+    }
+    else {
+        
+        initParams(req.query);
     //console.log(options);
     
     request(options, function(err, response){
@@ -37,7 +45,7 @@ app.get("/", function(req, res){
             
             var jsonResults = filterResults(images.value, offset, count);
            // console.log(p);
-            res.json(jsonResults);
+            res.write(JSON.stringify(jsonResults));
             res.end();
             
         }
@@ -47,6 +55,13 @@ app.get("/", function(req, res){
             
         }
     })
+        
+    }
+    
+    
+    
+    
+    
 })
 
 
@@ -223,7 +238,7 @@ function addToDb(searchMetaResult) {
                     console.log("Problem counting");
                     throw err;
                 }
-                else console.log(count);
+                //else console.log(count);
             })
         }
         db.close();

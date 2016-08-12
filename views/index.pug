@@ -1,0 +1,25 @@
+html
+  head
+    title Image Abstraction Layer 
+    
+  body
+    div(class="container")
+        h1 Image Abstraction Layer Application
+        blockquote <b>How it works:</b>
+            ul Pass a search term as a parameter in the url and receive a JSON response which includes urls of the images related to your search term. You can also include a count parameter (which decides how many results will be returned), and you can pass an offset parameter, to offset the results a specified amount.
+            
+        
+        h3 Example usage:
+        code 1. https://image-abstraction-pkh1162.herokuapp.com/?q=cats&count=1&offset=1
+        br
+        
+        h3 Example output
+        code 1. {"search term":"cats","offset":"1","count":"1","a0":{"name":"Proxecto Gato: cats wallpapers by bighdwallpapers","image_url":"http://4.bp.blogspot.com/-XkviAtJ1s6Q/T3YFb2RUhDI/AAAAAAAAAVQ/EHomLZlFMKo/s1600/small+cat.jpg","hostPage":"proxectogato.blogspot.com/2012/08/cats-wallpapers-by..."}}     
+        br
+        
+        
+        h3 Recent Searches
+        p The ten most recent searches made to the website can also be shown by typing:
+        code https://image-abstraction-pkh1162.herokuapp.com/recent
+    
+    
