@@ -2,8 +2,9 @@ var express = require("express");
 var request = require("request");
 var mongo = require("mongodb").MongoClient;
 var dbUrl = process.env.MONGO_URI_IMAGE_ABSTRACTION;
+var subscriptionKey = process.env.SUBSCRIPTION;
 
-var searchTerm = "";
+var searchTerm = "cats";
 var count = 10;
 var offset = 0;
 var recentSearches = {};
@@ -14,15 +15,14 @@ var recentSearchesCount = 0;
 var app = express();
 app.set("view engine", "pug");
 
+
+
 var options = {
     url : "https://api.cognitive.microsoft.com/bing/v5.0/images/search?q=" + searchTerm + "&count=" + count + "&offset=" + offset + "&mkt=en-us HTTP/1.1",
     headers : {
-        "Ocp-Apim-Subscription-Key" : "e5350f328cbe4a3580defdc1b467696f"
+        "Ocp-Apim-Subscription-Key" : subscriptionKey
     }
 };
-
-
-
 
 
 
@@ -33,18 +33,16 @@ app.get("/", function(req, res){
         res.render("index");
     }
     else {
-        
         initParams(req.query);
-    //console.log(options);
-    
+    console.log("this works", options)
+
     request(options, function(err, response){
         if (!err){
             console.log("response sent.")
-   //         console.log(typeof response.body);
             var images = JSON.parse(response.body);
-            
+            console.log("dlknl", images)
             var jsonResults = filterResults(images.value, offset, count);
-           // console.log(p);
+            
             res.write(JSON.stringify(jsonResults));
             res.end();
             
@@ -75,7 +73,6 @@ app.get("/recent", function(req, res){
             throw err;
         }
         else{
-            console.log("Connected");
             var collection = db.collection("image_abstraction_recentSearches");
             collection.count(function(err, count){
                 if (err){
@@ -126,14 +123,18 @@ app.listen(process.env.PORT || 8080, function(){
 
 function filterResults(results, offset, count){
   //  var arr = [];
+  
     var json = {};
     var time = new Date();
+   
     if(searchTerm != ""){
+       
         addToRecent(searchTerm, time);
+        
     }
     
     if (results == ""){
-        json["no results"] = "Sorry, your search turned up no results. Try something else." 
+        json["no results"] = "Sorry, your search turned up no results. Try something else.";
     }
     else{
         for (var img in results){
@@ -185,7 +186,7 @@ function initParams(query){
     options = {
     url : "https://api.cognitive.microsoft.com/bing/v5.0/images/search?q=" + searchTerm + "&count=" + count + "&offset=" + offset + "&mkt=en-us HTTP/1.1",
     headers : {
-        "Ocp-Apim-Subscription-Key" : "e5350f328cbe4a3580defdc1b467696f"
+        "Ocp-Apim-Subscription-Key" : "3f43e7c03bd840f8b059137fd5f7ee11"
     }
     }
     
@@ -194,17 +195,18 @@ function initParams(query){
 
 
 function addToRecent(searchedTerm, time){
+   
     var count = "search_" + recentCount.toString();
     var formattedDate = time.getDate() + "/" + time.getMonth() + "/" + time.getFullYear();
     var formattedTime = time.getHours() + ":" + time.getMinutes();
-    
+   
     recentSearches[count] = {
         term_searched : searchedTerm,
         date : formattedDate,
         time : formattedTime
     }
+   
     recentCount++;
-    
     addToDb(recentSearches[count]);
     
     
@@ -212,7 +214,7 @@ function addToRecent(searchedTerm, time){
 
 
 function addToDb(searchMetaResult) {
-    
+    console.log(dbUrl)
     mongo.connect(dbUrl, function(err, db){
         if (err){
             console.log("Couldn't connect to the database");
@@ -221,7 +223,6 @@ function addToDb(searchMetaResult) {
         else{
             console.log("Connected to the database");
             var searchesCollection = db.collection("image_abstraction_recentSearches");
-            
             
             
             searchesCollection.insert(searchMetaResult, function(err, data){
